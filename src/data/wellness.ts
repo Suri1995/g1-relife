@@ -31,11 +31,25 @@ export const business = {
   ],
 };
 
+export type ServiceCategory =
+  | "weight-body"
+  | "nutrition-vitality"
+  | "life-stage"
+  | "mind-rest";
+
+export const serviceCategories: { id: ServiceCategory; label: string }[] = [
+  { id: "weight-body", label: "Weight & Body" },
+  { id: "nutrition-vitality", label: "Nutrition & Vitality" },
+  { id: "life-stage", label: "Life Stage Care" },
+  { id: "mind-rest", label: "Mind & Rest" },
+];
+
 export type Service = {
   id: string;
   title: string;
   description: string;
   image: string;
+  category: ServiceCategory;
 };
 
 export const services: Service[] = [
@@ -46,6 +60,7 @@ export const services: Service[] = [
       "A personalized plan to help you burn fat, lose excess weight, and improve overall health safely.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25342/WhatsApp-Image-2026-05-01-at-2.54.36-PM.jpeg",
+    category: "weight-body",
   },
   {
     id: "muscle-gain",
@@ -54,6 +69,7 @@ export const services: Service[] = [
       "The process of increasing muscle mass through strength training, proper nutrition, and recovery.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25343/WhatsApp-Image-2026-05-01-at-2.56.17-PM.jpeg",
+    category: "weight-body",
   },
   {
     id: "weight-management",
@@ -62,6 +78,7 @@ export const services: Service[] = [
       "Maintaining a healthy body weight through balanced diet, regular exercise, and lifestyle habits.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25344/WhatsApp-Image-2026-05-01-at-2.57.23-PM.jpeg",
+    category: "weight-body",
   },
   {
     id: "digestive-health",
@@ -70,6 +87,7 @@ export const services: Service[] = [
       "Efficient functioning of the digestive system to properly break down food, absorb nutrients, and eliminate waste.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25345/WhatsApp-Image-2026-05-01-at-2.58.30-PM.jpeg",
+    category: "nutrition-vitality",
   },
   {
     id: "heart-health",
@@ -78,6 +96,7 @@ export const services: Service[] = [
       "Proper functioning of the heart and blood vessels, supported by a healthy lifestyle, diet, and regular physical activity.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25346/WhatsApp-Image-2026-05-01-at-2.59.22-PM.jpeg",
+    category: "nutrition-vitality",
   },
   {
     id: "bone-joint-support",
@@ -86,6 +105,7 @@ export const services: Service[] = [
       "Maintaining strong bones and flexible joints through proper nutrition, exercise, and healthy lifestyle habits.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25347/WhatsApp-Image-2026-05-01-at-3.00.12-PM.jpeg",
+    category: "nutrition-vitality",
   },
   {
     id: "energy-fitness",
@@ -94,6 +114,7 @@ export const services: Service[] = [
       "The body's ability to stay active, perform daily tasks efficiently, and maintain overall physical stamina and vitality.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25348/WhatsApp-Image-2026-05-01-at-3.01.09-PM.jpeg",
+    category: "weight-body",
   },
   {
     id: "sports-nutrition",
@@ -102,6 +123,7 @@ export const services: Service[] = [
       "Fueling the body with the right nutrients to enhance athletic performance, recovery, and endurance.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25349/WhatsApp-Image-2026-05-01-at-3.01.56-PM.jpeg",
+    category: "nutrition-vitality",
   },
   {
     id: "childrens-nutrition",
@@ -110,6 +132,7 @@ export const services: Service[] = [
       "Balanced nutrients essential for a child's growth, development, and overall health.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25350/WhatsApp-Image-2026-05-01-at-3.03.00-PM.jpeg",
+    category: "life-stage",
   },
   {
     id: "senior-nutrition",
@@ -118,6 +141,7 @@ export const services: Service[] = [
       "Tailored intake of nutrients that supports healthy aging, maintains strength, and helps manage age-related health changes.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25351/WhatsApp-Image-2026-05-01-at-3.04.22-PM.jpeg",
+    category: "life-stage",
   },
   {
     id: "mens-womens-health",
@@ -126,6 +150,7 @@ export const services: Service[] = [
       "Supporting gender-specific nutritional and lifestyle needs to maintain overall well-being and prevent health issues.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25352/WhatsApp-Image-2026-05-01-at-3.05.58-PM.jpeg",
+    category: "life-stage",
   },
   {
     id: "stress-management",
@@ -134,6 +159,7 @@ export const services: Service[] = [
       "Using techniques like healthy habits, relaxation, and exercise to reduce stress and improve mental well-being.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25353/WhatsApp-Image-2026-05-01-at-3.08.52-PM.jpeg",
+    category: "mind-rest",
   },
   {
     id: "skin-health",
@@ -142,6 +168,7 @@ export const services: Service[] = [
       "Maintaining clear, strong, and hydrated skin through proper nutrition, hydration, protection, and skincare habits.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25354/WhatsApp-Image-2026-05-01-at-3.10.08-PM.jpeg",
+    category: "nutrition-vitality",
   },
   {
     id: "sleep-management",
@@ -150,6 +177,7 @@ export const services: Service[] = [
       "Maintaining healthy sleep patterns through consistent routines, relaxation practices, and good sleep hygiene.",
     image:
       "https://mybusinessweb.in/uploads/vcards/services/25355/WhatsApp-Image-2026-05-01-at-3.11.26-PM.jpeg",
+    category: "mind-rest",
   },
 ];
 

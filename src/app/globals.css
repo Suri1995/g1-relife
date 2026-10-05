@@ -57,7 +57,7 @@ select:focus-visible {
 
 .container-content {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding-left: clamp(1.25rem, 4vw, 2.5rem);
