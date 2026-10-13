@@ -321,18 +321,7 @@ const ServiceCard = forwardRef<HTMLLIElement, ServiceCardProps>(
             <div className="relative flex flex-1 items-start justify-between gap-3 p-5 sm:p-6">
               <div className="min-w-0 flex-1">
                 <h3 className="font-display text-[17px] font-medium leading-snug text-evergreen sm:text-lg">
-                  {/* Stretched button: the whole card is the click target, but
-                      the markup stays valid and the accessible name is the title. */}
-                  <button
-                    type="button"
-                    aria-haspopup="dialog"
-                    onClick={(e) => onSelect(service, e.currentTarget)}
-                    onPointerEnter={preloadModal}
-                    onFocus={preloadModal}
-                    className="text-left outline-none after:absolute after:inset-0 after:z-30 after:content-['']"
-                  >
-                    <Highlight text={service.title} query={query} />
-                  </button>
+                  <Highlight text={service.title} query={query} />
                 </h3>
                 <p className="mt-2 line-clamp-2 text-[13.5px] leading-relaxed text-moss/90">
                   <Highlight text={service.description} query={query} />
@@ -350,6 +339,15 @@ const ServiceCard = forwardRef<HTMLLIElement, ServiceCardProps>(
             <span
               aria-hidden
               className="absolute inset-x-0 bottom-0 z-10 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-honey via-honey/60 to-transparent transition-transform duration-500 ease-out group-hover:scale-x-100"
+            />
+            <button
+              type="button"
+              aria-label={`View details for ${service.title}`}
+              aria-haspopup="dialog"
+              onClick={(e) => onSelect(service, e.currentTarget)}
+              onPointerEnter={preloadModal}
+              onFocus={preloadModal}
+              className="absolute inset-0 z-30 cursor-pointer rounded-2xl text-left outline-none focus-visible:ring-2 focus-visible:ring-honey focus-visible:ring-offset-2"
             />
           </article>
         </motion.div>
