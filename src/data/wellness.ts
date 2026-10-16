@@ -612,12 +612,26 @@ export const opportunity = {
 };
 
 export const gallery = [
-  "https://mybusinessweb.in/uploads/vcards/gallery/25357/WhatsApp-Image-2026-05-01-at-12.23.16-PM.jpeg",
-  "https://mybusinessweb.in/uploads/vcards/gallery/25358/WhatsApp-Image-2026-05-01-at-12.37.32-PM.jpeg",
-  "https://mybusinessweb.in/uploads/vcards/gallery/25359/WhatsApp-Image-2026-05-01-at-12.37.55-PM.jpeg",
-  "https://mybusinessweb.in/uploads/vcards/gallery/25360/WhatsApp-Image-2026-05-01-at-12.38.29-PM.jpeg",
-  "https://mybusinessweb.in/uploads/vcards/gallery/25361/WhatsApp-Image-2026-05-01-at-12.39.24-PM.jpeg",
+  "/gallery-1.webp",
+  "/gallery-2.webp",
+  "/gallery-3.webp",
+  "/gallery-4.webp",
 ];
+
+export const Stories = [
+  "/client-2.webp",
+  "/client-2.1.webp",
+  "/client-3.webp",
+  "/client-4.webp",
+  "/client-4.1.webp", 
+  "/client-6.webp",
+  "/client-7.webp",
+  "/client-8.webp",
+  "/client-9.webp",
+  "/client-10.webp",
+  "/client-11.webp",
+];
+
 
 export const journeySteps = [
   {

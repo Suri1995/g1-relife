@@ -70,7 +70,7 @@ export default function Navbar() {
           href="#contact"
           className="hidden rounded-full bg-honey px-5 py-2.5 text-[14px] font-medium text-evergreen-dark transition hover:bg-honey-light lg:block"
         >
-          Book a consultation
+          Schedule My Wellness Session
         </a>
 
         <button
@@ -103,7 +103,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
             className="mt-3 block rounded-full bg-honey px-5 py-3 text-center text-[14px] font-medium text-evergreen-dark"
           >
-            Book a consultation
+            Schedule My Wellness Session
           </a>
         </div>
       )}

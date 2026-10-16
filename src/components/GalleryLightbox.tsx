@@ -11,11 +11,15 @@ export default function GalleryLightbox({
   index,
   onClose,
   onNavigate,
+  imageLabel = "Gallery",
+  layoutIdPrefix = "gallery-photo",
 }: {
   images: string[];
   index: number | null;
   onClose: () => void;
   onNavigate: (next: number) => void;
+  imageLabel?: string;
+  layoutIdPrefix?: string;
 }) {
   const open = index !== null;
   const dialogRef = useFocusTrap<HTMLDivElement>(open);
@@ -49,7 +53,7 @@ export default function GalleryLightbox({
           className="fixed inset-0 z-[100] flex items-center justify-center bg-evergreen-dark/90 p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Gallery image viewer"
+          aria-label={`${imageLabel} image viewer`}
         >
           <button
             aria-label="Close gallery"
@@ -72,7 +76,7 @@ export default function GalleryLightbox({
 
           <motion.div
             key={index}
-            layoutId={`gallery-photo-${index}`}
+            layoutId={`${layoutIdPrefix}-${index}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -82,7 +86,7 @@ export default function GalleryLightbox({
           >
             <Image
               src={images[index]}
-              alt={`Gallery image ${index + 1}`}
+              alt={`${imageLabel} ${index + 1}`}
               fill
               sizes="90vw"
               className="rounded-xl object-contain"
