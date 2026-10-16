@@ -9,6 +9,7 @@ import BMICalculator from "@/components/BMICalculator";
 import Gallery from "@/components/Gallery";
 import CTASection from "@/components/CTASection";
 import Contact from "@/components/Contact";
+import SuccessStory from "@/components/SuccessStory";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <About />
       <Services />
       <WellnessOpportunity />
+      <SuccessStory />
       <WhyChooseUs />
       <WellnessJourney />
       <BMICalculator />
