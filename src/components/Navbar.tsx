@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Menu, X, Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
+import image from "next/image";
+
 
 const links = [
   { href: "#about", label: "About" },
@@ -41,7 +43,7 @@ export default function Navbar() {
       )}
     >
       <nav className="container-content flex h-[72px] items-center justify-between">
-        <a href="#top" className="flex items-center gap-2">
+        <a href="#top" className="">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-evergreen text-sage">
             <Leaf size={18} strokeWidth={2} />
           </span>

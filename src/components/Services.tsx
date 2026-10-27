@@ -228,9 +228,9 @@ function SearchBar({
               onChange("");
               inputRef.current?.focus();
             }}
-            className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-moss outline-none transition-colors hover:bg-evergreen/[0.08] focus-visible:ring-2 focus-visible:ring-honey"
+            className="absolute inset-y-0 right-2.5 my-auto grid h-8 w-8 place-items-center rounded-full p-0 text-moss leading-none outline-none transition-colors hover:bg-evergreen/[0.08] focus-visible:ring-2 focus-visible:ring-honey"
           >
-            <X size={15} />
+            <X size={15} className="shrink-0" />
           </motion.button>
         )}
       </AnimatePresence>
