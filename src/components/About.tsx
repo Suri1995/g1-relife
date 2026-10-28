@@ -109,7 +109,7 @@ function TiltPortrait() {
             alt={`${business.coachName}, ${business.coachTitle}`}
             fill
             sizes="(max-width: 1024px) 80vw, 380px"
-            className="object-cover"
+            className="object-contain"
           />
           {/* Soft light sweep that tracks the cursor */}
           <motion.div

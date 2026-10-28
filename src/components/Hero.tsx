@@ -142,7 +142,7 @@ export default function Hero() {
     <section
       id="top"
       ref={sectionRef}
-      className="relative overflow-hidden bg-evergreen-dark pb-24 pt-16 grain sm:pb-32 sm:pt-20"
+      className="relative overflow-hidden bg-[var(--Primary)] pb-24 pt-16 grain sm:pb-32 sm:pt-20"
     >
       {/* Organic frame shape used to clip the hero photo — a soft,
           asymmetric silhouette instead of a plain rounded rectangle. */}
@@ -293,8 +293,8 @@ export default function Hero() {
                 src={business.profileImage}
                 alt={business.coachName}
                 fill
-                sizes="180px"
-                className="object-cover"
+                sizes="170px"
+                className="w-40 object-cover"
               />
             </motion.div>
 
