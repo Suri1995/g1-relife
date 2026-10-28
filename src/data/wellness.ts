@@ -20,7 +20,7 @@ export const business = {
   coverImage:
     "https://mybusinessweb.in/uploads/vcards/covers/25341/WhatsApp-Image-2026-05-01-at-2.42.32-PM.jpeg",
   profileImage:
-    "/veena-mam.webp",
+    "/veena-mam3.webp",
   about: [
     "At G1 RE-LIFE Wellness Zone, we are dedicated to helping individuals achieve a healthier, more balanced lifestyle. Our mission is to promote overall well-being through personalized wellness solutions that focus on both physical and mental health.",
     "We believe that true wellness comes from a combination of proper nutrition, fitness, and a positive mindset. At G1 RE-LIFE Wellness Zone, we provide guidance, support, and effective wellness programs tailored to meet individual needs and goals.",
@@ -66,7 +66,7 @@ export const services: Service[] = [
   description:
     "A personalized plan to help you burn fat, lose excess weight, and improve overall health safely.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25342/WhatsApp-Image-2026-05-01-at-2.54.36-PM.jpeg",
+    "/images/services/weight-fat-loss.webp",
   category: "weight-body",
   details: {
     heading:
@@ -102,7 +102,7 @@ export const services: Service[] = [
   description:
     "The process of increasing muscle mass through strength training, proper nutrition, and recovery.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25343/WhatsApp-Image-2026-05-01-at-2.56.17-PM.jpeg",
+    "/images/services/muscle-gain.webp",
   category: "weight-body",
   details: {
     heading: "Muscle Gain Program – Build Strength, Build Confidence!",
@@ -137,7 +137,7 @@ export const services: Service[] = [
   description:
     "Maintaining a healthy body weight through balanced diet, regular exercise, and lifestyle habits.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25344/WhatsApp-Image-2026-05-01-at-2.57.23-PM.jpeg",
+    "/images/services/weight-management.webp",
   category: "weight-body",
   details: {
     heading: "Achieve a Healthier You!",
@@ -174,7 +174,7 @@ export const services: Service[] = [
   description:
     "Efficient functioning of the digestive system to properly break down food, absorb nutrients, and eliminate waste.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25345/WhatsApp-Image-2026-05-01-at-2.58.30-PM.jpeg",
+    "/images/services/digestive-health.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Support Your Gut Health Naturally!",
@@ -209,7 +209,7 @@ export const services: Service[] = [
   description:
     "Proper functioning of the heart and blood vessels, supported by a healthy lifestyle, diet, and regular physical activity.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25346/WhatsApp-Image-2026-05-01-at-2.59.22-PM.jpeg",
+    "/images/services/heart-health.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Heart Health – Care for Your Heart, Care for Your Life!",
@@ -244,7 +244,7 @@ export const services: Service[] = [
   description:
     "Maintaining strong bones and flexible joints through proper nutrition, exercise, and healthy lifestyle habits.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25347/WhatsApp-Image-2026-05-01-at-3.00.12-PM.jpeg",
+    "/images/services/boneandjoints.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Build Strong Bones and Support Healthy Joints!",
@@ -279,7 +279,7 @@ export const services: Service[] = [
   description:
     "The body's ability to stay active, perform daily tasks efficiently, and maintain overall physical stamina and vitality.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25348/WhatsApp-Image-2026-05-01-at-3.01.09-PM.jpeg",
+    "/images/services/energy-fitness.webp",
   category: "weight-body",
   details: {
     heading: "Energy & Fitness – Feel Active, Stay Fit, Live Better!",
@@ -315,7 +315,7 @@ export const services: Service[] = [
   description:
     "Fueling the body with the right nutrients to enhance athletic performance, recovery, and endurance.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25349/WhatsApp-Image-2026-05-01-at-3.01.56-PM.jpeg",
+    "/images/services/sports-nutrition.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Sports Nutrition – Fuel Your Body, Boost Your Performance!",
@@ -352,7 +352,7 @@ export const services: Service[] = [
   description:
     "Balanced nutrients essential for a child's growth, development, and overall health.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25350/WhatsApp-Image-2026-05-01-at-3.03.00-PM.jpeg",
+    "/images/services/children-nutrition.webp",
   category: "life-stage",
   details: {
     heading: "Children’s Nutrition – Healthy Kids, Bright Future!",
@@ -388,7 +388,7 @@ export const services: Service[] = [
   description:
     "Tailored intake of nutrients that supports healthy aging, maintains strength, and helps manage age-related health changes.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25351/WhatsApp-Image-2026-05-01-at-3.04.22-PM.jpeg",
+    "/images/services/senior-nutrition.webp",
   category: "life-stage",
   details: {
     heading: "Senior Nutrition – Healthy Ageing, Happy Living!",
@@ -426,7 +426,7 @@ export const services: Service[] = [
     description:
       "Supporting gender-specific nutritional and lifestyle needs to maintain overall well-being and prevent health issues.",
     image:
-      "https://mybusinessweb.in/uploads/vcards/services/25352/WhatsApp-Image-2026-05-01-at-3.05.58-PM.jpeg",
+      "/images/services/menwomen-health.webp",
     category: "life-stage",
     details: {
       heading: "Nutrition and Lifestyle Support for Every Life Stage",
@@ -460,7 +460,7 @@ export const services: Service[] = [
   description:
     "Using techniques like healthy habits, relaxation, and exercise to reduce stress and improve mental well-being.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25353/WhatsApp-Image-2026-05-01-at-3.08.52-PM.jpeg",
+    "/images/services/stress-management.webp",
   category: "mind-rest",
   details: {
     heading: "Stress Management – Relax Your Mind, Refresh Your Life!",
@@ -497,7 +497,7 @@ export const services: Service[] = [
   description:
     "Maintaining clear, strong, and hydrated skin through proper nutrition, hydration, protection, and skincare habits.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25354/WhatsApp-Image-2026-05-01-at-3.10.08-PM.jpeg",
+    "/images/services/skin-health.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Skin Health – Nourish Your Skin, Glow with Confidence!",
@@ -533,7 +533,7 @@ export const services: Service[] = [
   description:
     "Supporting the immune system through balanced nutrition, healthy lifestyle choices, and stress management.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25343/WhatsApp-Image-2026-05-01-at-2.56.17-PM.jpeg",
+    "/images/services/immune-health.webp",
   category: "nutrition-vitality",
   details: {
     heading: "Immunity Health – Build Healthy Habits, Support Your Body!",
@@ -570,7 +570,7 @@ export const services: Service[] = [
   description:
     "Maintaining healthy sleep patterns through consistent routines, relaxation practices, and good sleep hygiene.",
   image:
-    "https://mybusinessweb.in/uploads/vcards/services/25355/WhatsApp-Image-2026-05-01-at-3.11.26-PM.jpeg",
+    "/images/services/sleep-management.webp",
   category: "mind-rest",
   details: {
     heading: "Sleep Management – Sleep Better, Live Healthier!",

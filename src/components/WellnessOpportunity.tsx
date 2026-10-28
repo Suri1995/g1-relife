@@ -150,7 +150,7 @@ export default function WellnessOpportunity() {
   return (
     <section
       ref={sectionRef}
-      className="section-pad relative overflow-hidden bg-evergreen"
+      className="section-pad relative overflow-hidden bg-[var(--Primary)]"
     >
       {/* Ambient background glows */}
       <motion.div
@@ -168,7 +168,7 @@ export default function WellnessOpportunity() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="relative grid items-center gap-10 overflow-hidden rounded-[2rem] bg-evergreen-dark p-6 grain sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:gap-14 lg:p-14"
+          className="relative grid items-center gap-10 overflow-hidden rounded-[2rem] bg-[var(--Dark)] p-6 grain sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:gap-14 lg:p-14"
         >
           {/* Subtle animated border glow */}
           <motion.div

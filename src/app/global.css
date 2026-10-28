@@ -5,6 +5,16 @@
 :root {
   --font-fraunces: "Fraunces", serif;
   --font-inter: "Inter", sans-serif;
+
+  /* Gire-Life brand palette */
+  --Primary: #475545; /* Primary */
+  --Dark: #394637;    /* Text / dark */
+  --Secondary: #818981;    /* Secondary */
+  --Accent: #C69A75;  /* Accent */
+  --Accent-dark: #AC7F5C;       /* Accent dark */
+  --Accent-light: #D8B391;    /* Accent light */
+  --Background: #F5EEE4;  /* Background */
+  --Surface: #FCFAF6;  /* Surface */
 }
 
 * {
@@ -22,8 +32,8 @@
 
 html,
 body {
-  background-color: #F7F4EC;
-  color: #20241E;
+  background-color: var(--color-ivory-cream);
+  color: var(--color-deep-pine);
 }
 
 body {
@@ -35,8 +45,8 @@ h1, h2, h3, h4, .font-display {
 }
 
 ::selection {
-  background-color: #C68A34;
-  color: #F7F4EC;
+  background-color: var(--color-forest-green);
+  color: var(--color-ivory-cream);
 }
 
 /* visible keyboard focus everywhere */
@@ -45,7 +55,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #C68A34;
+  outline: 2px solid var(--color-copper);
   outline-offset: 3px;
   border-radius: 2px;
 }

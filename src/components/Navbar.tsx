@@ -5,7 +5,6 @@ import { Menu, X, Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 import image from "next/image";
 
-
 const links = [
   { href: "#about", label: "About" },
   { href: "#services", label: "Services" },
@@ -39,20 +38,20 @@ export default function Navbar() {
         "sticky top-0 z-50 w-full transition-colors duration-300",
         scrolled || open
           ? "bg-cream/[0.97] backdrop-blur-md shadow-[0_1px_0_0_rgba(23,50,38,0.08)]"
-          : "bg-transparent"
+          : "bg-transparent",
       )}
     >
       <nav className="container-content flex h-[72px] items-center justify-between">
-        <a href="#top" className="">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-evergreen text-sage">
-            <Leaf size={18} strokeWidth={2} />
-          </span>
-          <span className="font-display text-[17px] font-medium leading-tight text-evergreen">
-            G1 RE-LIFE
-            <span className="block text-[10px] font-body font-normal tracking-[0.14em] text-sage-dark">
-              WELLNESS ZONE
-            </span>
-          </span>
+        <a
+          href="#top"
+          className="flex shrink-0 items-center justify-center"
+          aria-label="G1 RE-LIFE Home"
+        >
+          <img
+            src="/g1relife-logo-transparent.webp"
+            alt="G1 RE-LIFE"
+            className="block h-15 w-auto max-w-[140px] object-contain object-left"
+          />
         </a>
 
         <ul className="hidden items-center gap-8 lg:flex">
