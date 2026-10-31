@@ -141,7 +141,7 @@ export default function BMICalculator() {
           <SectionHeading
             tone="light"
             align="center"
-            title="Check your BMI in seconds"
+            title="Complete Body Analysis"
             description="A quick starting point for our conversation — not a diagnosis. Your coach will look at the full picture with you."
           />
         </div>

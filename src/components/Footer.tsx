@@ -7,12 +7,11 @@ export default function Footer() {
       <div className="container-content grid gap-10 pb-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sage/15 text-sage-light">
-              <Leaf size={16} />
-            </span>
-            <span className="font-display text-[16px] text-cream">
-              G1 RE-LIFE
-            </span>
+            <img
+            src="/logo_white_transparent.png"
+            alt="G1 RE-LIFE"
+            className="block h-30 w-auto max-w-[180px] object-contain object-left"
+          />
           </div>
           <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed">
             Personalized wellness solutions for a healthier, more balanced

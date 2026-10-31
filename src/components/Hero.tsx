@@ -1,42 +1,53 @@
 "use client";
 
-import { useRef } from "react";
-import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import { useEffect, useRef } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import {
+  animate,
   motion,
+  useInView,
   useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
+  type Variants,
 } from "framer-motion";
 import Image from "next/image";
-import { ArrowRight, Leaf } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Leaf } from "lucide-react";
 import { business, services } from "@/data/wellness";
 
-const container = {
+/* -------------------------------------------------------------------------- */
+/*  Motion tokens                                                             */
+/* -------------------------------------------------------------------------- */
+
+// One easing curve for every entrance keeps the sequence feeling related.
+const ease = [0.16, 1, 0.3, 1] as const;
+
+const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } },
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-  },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
 };
 
-// Mask-slide combined with a blur-to-focus resolve — a slightly more
-// cinematic version of the original line reveal.
-const lineReveal = {
+// The headline is a nested stagger: lines are masked, words rise and resolve
+// from blur one after another.
+const headlineStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055 } },
+};
+
+const wordReveal: Variants = {
   hidden: { y: "115%", filter: "blur(8px)" },
   show: {
     y: "0%",
     filter: "blur(0px)",
-    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.95, ease },
   },
 };
 
@@ -46,20 +57,30 @@ const headlineLines = [
   "with one conversation.",
 ];
 
+const clamp = (v: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, v));
+
+/* -------------------------------------------------------------------------- */
+/*  Small pieces                                                              */
+/* -------------------------------------------------------------------------- */
+
 /**
- * A link that drifts gently toward the cursor on hover — a small,
- * tactile "premium" affordance. Disabled entirely under
- * prefers-reduced-motion.
+ * Link that leans toward the cursor. The label travels a little further than
+ * the button body, which gives the press a sense of depth.
  */
 function MagneticLink({
   href,
   external,
   className,
+  innerClassName = "inline-flex items-center gap-2",
+  shine,
   children,
 }: {
   href: string;
   external?: boolean;
   className: string;
+  innerClassName?: string;
+  shine?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -68,9 +89,11 @@ function MagneticLink({
   const y = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 200, damping: 18, mass: 0.4 });
   const springY = useSpring(y, { stiffness: 200, damping: 18, mass: 0.4 });
+  const innerX = useTransform(springX, (v) => v * 0.4);
+  const innerY = useTransform(springY, (v) => v * 0.4);
 
-  const handleMove = (e: ReactMouseEvent<HTMLAnchorElement>) => {
-    if (reduceMotion || !ref.current) return;
+  const handleMove = (e: ReactPointerEvent<HTMLAnchorElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse" || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     x.set((e.clientX - rect.left - rect.width / 2) * 0.3);
     y.set((e.clientY - rect.top - rect.height / 2) * 0.3);
@@ -86,77 +109,161 @@ function MagneticLink({
       ref={ref}
       href={href}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
+      onPointerMove={handleMove}
+      onPointerLeave={handleLeave}
       whileTap={reduceMotion ? undefined : { scale: 0.96 }}
       style={{ x: springX, y: springY }}
       className={className}
     >
-      {children}
+      <motion.span style={{ x: innerX, y: innerY }} className={innerClassName}>
+        {children}
+      </motion.span>
+      {shine && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[320%] motion-reduce:hidden"
+        />
+      )}
     </motion.a>
   );
 }
+
+/** Counts up once, when it scrolls into view. */
+function CountUp({ to, delay = 0 }: { to: number; delay?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const reduceMotion = useReducedMotion();
+  const value = useMotionValue(0);
+  const rounded = useTransform(value, (v) => Math.round(v));
+
+  useEffect(() => {
+    if (!inView) return;
+    if (reduceMotion) {
+      value.set(to);
+      return;
+    }
+    const controls = animate(value, to, { duration: 1.6, ease, delay });
+    return () => controls.stop();
+  }, [inView, reduceMotion, to, delay, value]);
+
+  return (
+    <>
+      <motion.span ref={ref}>{rounded}</motion.span>+
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Hero                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
 
-  // Photo tilt
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
-  const springX = useSpring(rotateX, { stiffness: 150, damping: 22 });
-  const springY = useSpring(rotateY, { stiffness: 150, damping: 22 });
+  /* Pointer position inside the photo composition, -0.5 to 0.5 on each axis.
+     Everything in the stack (tilt, print, tag) derives from these two values,
+     so the layers always move together. */
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const spx = useSpring(px, { stiffness: 150, damping: 22 });
+  const spy = useSpring(py, { stiffness: 150, damping: 22 });
 
-  // Sheen that travels across the photo, derived from the same tilt values
-  const glareX = useTransform(springY, [-9, 9], ["15%", "85%"]);
-  const glareY = useTransform(springX, [-9, 9], ["85%", "15%"]);
+  const rotateY = useTransform(spx, [-0.5, 0.5], [-9, 9]);
+  const rotateX = useTransform(spy, [-0.5, 0.5], [9, -9]);
+
+  // Glare travels across the photo with the tilt
+  const glareX = useTransform(spx, [-0.5, 0.5], ["15%", "85%"]);
+  const glareY = useTransform(spy, [-0.5, 0.5], ["85%", "15%"]);
   const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(255,255,255,0.28), transparent 55%)`;
 
-  // Oversized wordmark drifts slowly as the hero scrolls out of view
+  // Layers closer to the viewer drift against the cursor
+  const printX = useTransform(spx, (v) => v * -30);
+  const printY = useTransform(spy, (v) => v * -22);
+  const tagX = useTransform(spx, (v) => v * 26);
+  const tagY = useTransform(spy, (v) => v * 18);
+
+  /* Cursor-following light across the hero background (mouse only). */
+  const spotRawX = useMotionValue(0);
+  const spotRawY = useMotionValue(0);
+  const spotX = useSpring(spotRawX, { stiffness: 90, damping: 20 });
+  const spotY = useSpring(spotRawY, { stiffness: 90, damping: 20 });
+  const spotOpacity = useMotionValue(0);
+  const spotlight = useMotionTemplate`radial-gradient(480px circle at ${spotX}px ${spotY}px, rgba(240,200,120,0.1), transparent 65%)`;
+
+  /* Scroll-linked depth */
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
-  const wordmarkY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduceMotion ? [0, 0] : [0, 70]
-  );
+  const still = reduceMotion;
+  const wordmarkY = useTransform(scrollYProgress, [0, 1], still ? [0, 0] : [0, 70]);
+  const contentY = useTransform(scrollYProgress, [0, 1], still ? [0, 0] : [0, -48]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.65], still ? [1, 1] : [1, 0.15]);
+  const photoY = useTransform(scrollYProgress, [0, 1], still ? [0, 0] : [0, 36]);
+  const imageShift = useTransform(scrollYProgress, [0, 1], still ? ["0%", "0%"] : ["0%", "7%"]);
 
-  const handlePointerMove = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (reduceMotion || !frameRef.current) return;
-    const rect = frameRef.current.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    rotateY.set(px * 9);
-    rotateX.set(py * -9);
+  const handleSectionMove = (e: ReactPointerEvent<HTMLElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse" || !sectionRef.current) return;
+    const rect = sectionRef.current.getBoundingClientRect();
+    spotRawX.set(e.clientX - rect.left);
+    spotRawY.set(e.clientY - rect.top);
   };
 
-  const resetTilt = () => {
-    rotateX.set(0);
-    rotateY.set(0);
+  const handleSectionEnter = (e: ReactPointerEvent<HTMLElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse") return;
+    animate(spotOpacity, 1, { duration: 0.5 });
+  };
+
+  const handleSectionLeave = () => {
+    animate(spotOpacity, 0, { duration: 0.5 });
+  };
+
+  const handleStackMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse" || !frameRef.current) return;
+    const rect = frameRef.current.getBoundingClientRect();
+    px.set(clamp((e.clientX - rect.left) / rect.width - 0.5, -0.5, 0.5));
+    py.set(clamp((e.clientY - rect.top) / rect.height - 0.5, -0.5, 0.5));
+  };
+
+  const resetStack = () => {
+    px.set(0);
+    py.set(0);
   };
 
   return (
     <section
-      id="top"
-      ref={sectionRef}
-      className="relative overflow-hidden bg-[var(--Primary)] pb-24 pt-16 grain sm:pb-32 sm:pt-20"
-    >
-      {/* Organic frame shape used to clip the hero photo — a soft,
-          asymmetric silhouette instead of a plain rounded rectangle. */}
+  id="top"
+  ref={sectionRef}
+  onPointerMove={handleSectionMove}
+  onPointerEnter={handleSectionEnter}
+  onPointerLeave={handleSectionLeave}
+  className="relative min-h-screen overflow-hidden bg-[var(--Primary)] pb-24 pt-48 grain sm:pb-32 sm:pt-56 lg:pt-64"
+>
+      {/* Static ambient depth behind the photo */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(60%_55%_at_78%_32%,rgba(255,255,255,0.07),transparent_70%)]"
+      />
+
+      {/* Cursor-following light */}
+      <motion.div
+        aria-hidden
+        style={{ background: spotlight, opacity: spotOpacity }}
+        className="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+      />
+
+      {/* Organic frame silhouette, shared by the photo clip and the drawn outline */}
       <svg width="0" height="0" aria-hidden className="absolute">
         <defs>
           <clipPath id="reLifeFrame" clipPathUnits="objectBoundingBox">
-            <path d="M0.08,0 H0.76 C0.9,0 1,0.1 1,0.24 V0.7 C1,0.92 0.86,1 0.62,1 H0.14 C0.04,1 0,0.9 0,0.78 V0.16 C0,0.06 0.02,0 0.08,0 Z" />
+            <path d={FRAME_PATH} />
           </clipPath>
         </defs>
       </svg>
 
-      {/* Oversized brand wordmark running behind the whole composition —
-          a single deliberate typographic flourish, now with a slow
-          scroll-linked drift rather than sitting static. */}
+      {/* Oversized brand wordmark, drifting slowly as the hero scrolls away */}
       <motion.span
         aria-hidden
         style={{ y: wordmarkY }}
@@ -166,20 +273,20 @@ export default function Hero() {
       </motion.span>
 
       <div className="container-content relative z-10 grid gap-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10">
+        {/* ------------------------------ Copy ------------------------------ */}
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
+          style={{ y: contentY, opacity: contentOpacity }}
           className="relative lg:pl-8"
         >
-          {/* Growth-line accent — grows downward on load, and its visual
-              language (thin line + honey gradient) is echoed later by the
-              swing-tag thread and the scroll cue, tying the page together. */}
+          {/* Growth line, drawn downward on load */}
           <motion.span
             aria-hidden
             initial={{ scaleY: 0 }}
             animate={{ scaleY: 1 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            transition={{ duration: 1.4, ease, delay: 0.2 }}
             style={{ transformOrigin: "top" }}
             className="absolute left-0 top-1 hidden h-[calc(100%-3rem)] w-px bg-gradient-to-b from-honey via-honey/30 to-transparent lg:block"
           />
@@ -191,15 +298,23 @@ export default function Hero() {
             </span>
           </motion.div>
 
-          <h1 className="mt-6 font-display text-[clamp(2.3rem,5.5vw,4rem)] leading-[1.05] text-cream">
+          <motion.h1
+            variants={headlineStagger}
+            aria-label={headlineLines.join(" ")}
+            className="mt-6 font-display text-[clamp(2.3rem,5.5vw,4rem)] leading-[1.05] text-cream"
+          >
             {headlineLines.map((line, i) => (
-              <span key={i} className="block overflow-hidden py-1">
-                <motion.span variants={lineReveal} className="block">
-                  {line}
-                </motion.span>
+              <span key={i} aria-hidden className="block overflow-hidden py-1">
+                {line.split(" ").map((word, w) => (
+                  <span key={w}>
+                    <motion.span variants={wordReveal} className="inline-block">
+                      {word}
+                    </motion.span>{" "}
+                  </span>
+                ))}
               </span>
             ))}
-          </h1>
+          </motion.h1>
 
           <motion.p
             variants={fadeUp}
@@ -214,62 +329,112 @@ export default function Hero() {
           >
             <MagneticLink
               href="#contact"
-              className="group inline-flex items-center gap-2 rounded-full bg-honey px-7 py-3.5 text-[15px] font-medium text-evergreen-dark shadow-lg shadow-honey/20 transition-colors hover:bg-honey-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/60 focus-visible:ring-offset-2 focus-visible:ring-offset-evergreen-dark"
+              shine
+              innerClassName="inline-flex items-center gap-4"
+              className="group relative inline-flex overflow-hidden rounded-full bg-honey py-2 pl-7 pr-2 text-[15px] font-medium text-evergreen-dark shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_14px_30px_-14px_rgba(0,0,0,0.5)] transition-colors hover:bg-honey-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/60 focus-visible:ring-offset-2 focus-visible:ring-offset-evergreen-dark"
             >
               Start your journey
-              <ArrowRight
-                size={16}
-                className="transition-transform group-hover:translate-x-1"
-              />
+              {/* Arrow exits right while a second one enters from the left */}
+              <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-evergreen-dark text-cream">
+                <ArrowRight
+                  size={16}
+                  className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-9 motion-reduce:transition-none"
+                />
+                <ArrowRight
+                  size={16}
+                  aria-hidden
+                  className="absolute -translate-x-9 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 motion-reduce:transition-none"
+                />
+              </span>
             </MagneticLink>
 
             <MagneticLink
               href={business.whatsapp}
               external
-              className="group inline-flex items-center gap-1.5 text-[15px] font-medium text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/40 focus-visible:ring-offset-2 focus-visible:ring-offset-evergreen-dark"
+              innerClassName="inline-flex items-center gap-1.5"
+              className="group relative inline-flex text-[15px] font-medium text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/40 focus-visible:ring-offset-2 focus-visible:ring-offset-evergreen-dark"
             >
-              <span className="border-b border-cream/40 transition group-hover:border-cream">
+              <span className="relative">
                 Chat on WhatsApp
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 -bottom-1 h-px bg-cream/30"
+                />
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-cream transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100 motion-reduce:transition-none"
+                />
               </span>
-              <ArrowRight
-                size={14}
-                className="transition-transform group-hover:translate-x-1"
+              <ArrowUpRight
+                size={15}
+                className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
               />
             </MagneticLink>
           </motion.div>
         </motion.div>
 
+        {/* ------------------------------ Photos ----------------------------- */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.25 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          onPointerMove={handleStackMove}
+          onPointerLeave={resetStack}
           className="relative mx-auto w-full max-w-[420px]"
-          style={{ perspective: 1200 }}
+          style={{ perspective: 1200, y: photoY }}
         >
           <motion.div
             ref={frameRef}
-            onMouseMove={handlePointerMove}
-            onMouseLeave={resetTilt}
-            style={{ rotateX: springX, rotateY: springY }}
+            style={{ rotateX, rotateY }}
             className="relative aspect-[4/5] w-full"
           >
-            <div
+            {/* Outline in the same silhouette as the photo, drawn on load */}
+            <svg
               aria-hidden
-              className="absolute -inset-3 rounded-[2.5rem] border border-sage/20"
-            />
+              viewBox="0 0 1 1"
+              preserveAspectRatio="none"
+              className="pointer-events-none absolute -inset-3 h-[calc(100%+1.5rem)] w-[calc(100%+1.5rem)] overflow-visible text-sage"
+            >
+              <motion.path
+                d={FRAME_PATH}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                initial={{ pathLength: reduceMotion ? 1 : 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.45 }}
+                transition={{ duration: 2, ease, delay: 0.5 }}
+              />
+            </svg>
 
+            {/* Main photo: a curtain lifts while the image settles from a
+                slight zoom, then scroll shifts the image inside its frame. */}
             <div
               className="relative h-full w-full overflow-hidden shadow-2xl shadow-black/40"
               style={{ clipPath: "url(#reLifeFrame)" }}
             >
-              <Image
-                src="/ecofriendly-beauty-product.jpg"
-                alt="G1 RE-LIFE Wellness Zone"
-                fill
-                priority
-                sizes="(max-width: 1024px) 90vw, 420px"
-                className="object-cover"
-              />
+              <motion.div
+                className="absolute inset-0"
+                initial={{ scale: reduceMotion ? 1 : 1.18 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 1.8, ease }}
+              >
+                <motion.div
+                  style={{ y: imageShift, scale: 1.1 }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src="/ecofriendly-beauty-product.jpg"
+                    alt="G1 RE-LIFE Wellness Zone"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 90vw, 420px"
+                    className="object-cover"
+                  />
+                </motion.div>
+              </motion.div>
+
               {!reduceMotion && (
                 <motion.div
                   aria-hidden
@@ -278,62 +443,95 @@ export default function Hero() {
                 />
               )}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-evergreen-dark/50 via-transparent to-transparent" />
+
+              <motion.div
+                aria-hidden
+                initial={{ scaleY: reduceMotion ? 0 : 1 }}
+                animate={{ scaleY: 0 }}
+                transition={{ duration: 1.1, ease, delay: 0.25 }}
+                style={{ transformOrigin: "top" }}
+                className="absolute inset-0 z-10 bg-evergreen-dark"
+              />
             </div>
 
-            {/* Second photo, pinned like a print, adds depth without a
-                second competing motion effect — it simply settles in
-                slightly after the main frame. */}
+            {/* Pinned print: parallax on a wrapper, entrance and hover inside */}
             <motion.div
-              initial={{ opacity: 0, x: -16, y: 16 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut", delay: 0.6 }}
-              className="absolute -bottom-8 -left-10 hidden aspect-[3/4] w-[42%] overflow-hidden rounded-xl ring-[6px] ring-cream shadow-xl sm:block"
+              style={{ x: printX, y: printY }}
+              className="absolute -bottom-8 -left-10 hidden w-[42%] sm:block"
             >
-              <Image
-                src={business.profileImage}
-                alt={business.coachName}
-                fill
-                sizes="170px"
-                className="w-40 object-cover"
-              />
+              <motion.div
+                initial={{ opacity: 0, x: -16, y: 16, rotate: 0 }}
+                animate={{ opacity: 1, x: 0, y: 0, rotate: -2.5 }}
+                transition={{ duration: 0.9, ease, delay: 0.7 }}
+                whileHover={reduceMotion ? undefined : { y: -6, rotate: -1, scale: 1.03 }}
+                className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-white shadow-xl ring-[6px] ring-cream"
+              >
+                <Image
+                  src={business.profileImage}
+                  alt={business.coachName}
+                  fill
+                  sizes="170px"
+                  className="object-cover object-[center_0%]"
+                />
+              </motion.div>
             </motion.div>
 
-            {/* Swing-tag stat, now hung from a small stitched thread — a
-                literal "hang tag" rather than just a floating card. */}
+            {/* Hang tag: swings on its thread and settles, then reacts to hover */}
             <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.75 }}
-              className="absolute -right-4 -top-16 flex flex-col items-center sm:-right-7 sm:-top-20"
+              style={{ x: tagX, y: tagY }}
+              className="absolute -right-4 -top-16 sm:-right-7 sm:-top-20"
             >
-              <span
-                aria-hidden
-                className="h-8 w-px border-l border-dashed border-honey/50 sm:h-10"
-              />
-              <span
-                aria-hidden
-                className="-mt-[3px] h-2.5 w-2.5 rounded-full border border-honey/60 bg-cream"
-              />
-              <div className="mt-2 rotate-6 rounded-2xl border border-dashed border-honey/50 bg-cream px-5 py-4 shadow-xl">
-                <div className="flex items-center gap-1.5 text-honey-dark">
-                  <Leaf size={13} />
-                  <p className="font-display text-2xl leading-none text-evergreen">
-                    {services.length}+
+              <motion.div
+                initial={{ opacity: 0, rotate: reduceMotion ? 0 : 16 }}
+                animate={
+                  reduceMotion
+                    ? { opacity: 1, rotate: 0 }
+                    : { opacity: 1, rotate: [16, -7, 4, -1.5, 0] }
+                }
+                transition={{
+                  opacity: { duration: 0.5, delay: 0.9 },
+                  rotate: { duration: 2.4, ease: "easeOut", delay: 0.9 },
+                }}
+                whileHover={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        rotate: 4,
+                        transition: { type: "spring", stiffness: 120, damping: 6 },
+                      }
+                }
+                style={{ transformOrigin: "top center" }}
+                className="flex flex-col items-center"
+              >
+                <span
+                  aria-hidden
+                  className="h-8 w-px border-l border-dashed border-honey/50 sm:h-10"
+                />
+                <span
+                  aria-hidden
+                  className="-mt-[3px] h-2.5 w-2.5 rounded-full border border-honey/60 bg-cream"
+                />
+                <div className="mt-2 rotate-6 rounded-2xl border border-dashed border-honey/50 bg-cream px-5 py-4 shadow-xl">
+                  <div className="flex items-center gap-1.5 text-honey-dark">
+                    <Leaf size={13} />
+                    <p className="font-display text-2xl leading-none text-evergreen">
+                      <CountUp to={services.length} delay={1.2} />
+                    </p>
+                  </div>
+                  <p className="mt-1 text-[12px] leading-tight text-moss">
+                    wellness focus
+                    <br />
+                    areas covered
                   </p>
                 </div>
-                <p className="mt-1 text-[12px] leading-tight text-moss">
-                  wellness focus
-                  <br />
-                  areas covered
-                </p>
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 1 }}
             className="mt-10 text-center font-display text-[15px] italic text-cream/70 sm:mt-8"
           >
             {business.coachName} — {business.coachTitle}
@@ -341,13 +539,11 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Scroll cue — the one deliberate idle animation on the page,
-          reusing the same thin-line motif as the growth accent and the
-          swing-tag thread. */}
+      {/* Scroll cue: the one idle animation on the page */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.2 }}
+        transition={{ duration: 0.6, delay: 1.4 }}
         className="absolute inset-x-0 bottom-8 z-10 hidden justify-center lg:flex"
       >
         <a
@@ -371,3 +567,7 @@ export default function Hero() {
     </section>
   );
 }
+
+// Defined last so the JSX above reads top-down; used by both the clip and the outline.
+const FRAME_PATH =
+  "M0.08,0 H0.76 C0.9,0 1,0.1 1,0.24 V0.7 C1,0.92 0.86,1 0.62,1 H0.14 C0.04,1 0,0.9 0,0.78 V0.16 C0,0.06 0.02,0 0.08,0 Z";
