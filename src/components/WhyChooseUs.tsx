@@ -142,8 +142,8 @@ const SPOTLIGHT_BORDER: CSSProperties = {
 /*  Interactive grid spotlight                                                 */
 /* -------------------------------------------------------------------------- */
 
-function useGridSpotlight<T extends HTMLElement>(enabled: boolean) {
-  const ref = useRef<T>(null);
+function useGridSpotlight(enabled: boolean) {
+  const ref = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     const grid = ref.current;
