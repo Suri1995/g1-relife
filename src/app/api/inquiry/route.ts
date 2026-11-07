@@ -1,24 +1,23 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { Resend } from "resend";
 import { inquirySchema } from "@/lib/validation";
+import { business } from "@/data/wellness";
+import { buildOwnerEmail, buildThankYouEmail } from "@/lib/email-templates";
+import { LOGO_BASE64, LOGO_CONTENT_ID } from "@/lib/email-logo";
 
 export const runtime = "nodejs";
 
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => {
-    const entities: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    };
+const FROM = "G1 RE-LIFE Wellness Zone <noreply@g1-relife.com>";
+// Same sender name as the original plain notification (kept it in Primary).
+const OWNER_FROM = "G1 Relife <noreply@g1-relife.com>";
 
-    return entities[char];
-  });
-}
+// Logo is attached inline (CID) so it always shows, with no hosted URL needed.
+const logoAttachment = {
+  filename: "g1-logo.png",
+  content: Buffer.from(LOGO_BASE64, "base64"),
+  contentId: LOGO_CONTENT_ID,
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
       VALUES (
         ${name},
         ${phone},
-        ${email || null},
+        ${email},
         ${interest},
         ${message || null}
       )
@@ -80,87 +79,102 @@ export async function POST(req: NextRequest) {
       throw new Error("Inquiry could not be saved.");
     }
 
-    // Send notification through Resend
+    // Build both emails
+    const emailData = {
+      id: String(inquiry.id),
+      name,
+      phone,
+      email,
+      interest,
+      message: message || null,
+      createdAt: inquiry.created_at
+        ? new Date(inquiry.created_at as string | Date)
+        : new Date(),
+    };
+    const ctx = { business, logoSrc: `cid:${LOGO_CONTENT_ID}` };
+
+    const owner = buildOwnerEmail(emailData, ctx);
+    const thanks = buildThankYouEmail(emailData, ctx);
+
     const resend = new Resend(resendApiKey);
 
-    const safeName = escapeHtml(name);
-    const safePhone = escapeHtml(phone);
-    const safeEmail = escapeHtml(email || "Not provided");
-    const safeInterest = escapeHtml(interest);
-    const safeMessage = escapeHtml(message || "No additional message.");
+    const siteUrl = (
+      process.env.NEXT_PUBLIC_SITE_URL || "https://g1-relife.com"
+    ).replace(/\/+$/, "");
 
-    const { error: emailError } = await resend.emails.send({
-      from: "G1 Relife <noreply@g1-relife.com>",
+    type Payload = {
+      from: string;
+      to: string[];
+      replyTo?: string;
+      subject: string;
+      html: string;
+      text: string;
+    };
+
+    // Send with the inline logo. If Resend rejects the attachment, retry
+    // without it (logo falls back to the hosted file) so the email still arrives.
+    const problems: { email: string; error: unknown }[] = [];
+
+    const sendEmail = async (label: string, payload: Payload) => {
+      try {
+        const first = await resend.emails.send({
+          ...payload,
+          attachments: [logoAttachment],
+        });
+        if (!first.error) return true;
+
+        console.error(`[${label}] send with logo failed:`, first.error);
+        problems.push({ email: `${label} (with logo)`, error: first.error });
+
+        const fallbackHtml = payload.html
+          .split(`cid:${LOGO_CONTENT_ID}`)
+          .join(`${siteUrl}/android-chrome-192x192.png`);
+
+        const retry = await resend.emails.send({ ...payload, html: fallbackHtml });
+        if (retry.error) {
+          console.error(`[${label}] retry without logo failed:`, retry.error);
+          problems.push({ email: `${label} (retry)`, error: retry.error });
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.error(`[${label}] unexpected send error:`, err);
+        problems.push({ email: label, error: String(err) });
+        return false;
+      }
+    };
+
+    // Send one after the other (Resend rate-limits parallel bursts).
+    const emailSent = await sendEmail("owner-notification", {
+      from: OWNER_FROM,
       to: [contactEmail],
-      ...(email ? { replyTo: email } : {}),
-      subject: `New Website Inquiry - ${name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; color: #173b2c;">
-          <h2 style="color: #173b2c;">New G1 Relife Inquiry</h2>
+      replyTo: email,
+      subject: owner.subject,
+      html: owner.html,
+      text: owner.text,
+    });
 
-          <p>A new inquiry has been submitted through your website.</p>
+    // Brief pause so two sends never hit Resend's per-second limit.
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Inquiry ID</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${escapeHtml(String(inquiry.id))}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${safeName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Phone</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${safePhone}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Email</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${safeEmail}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Interest</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${safeInterest}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Message</strong></td>
-              <td style="padding: 10px; border-bottom: 1px solid #ddd;">${safeMessage}</td>
-            </tr>
-          </table>
-
-          <p style="margin-top: 24px; color: #777; font-size: 12px;">
-            G1 Relife Website Inquiry System
-          </p>
-        </div>
-      `,
-      text: `
-New G1 Relife Inquiry
-
-Inquiry ID: ${inquiry.id}
-Name: ${name}
-Phone: ${phone}
-Email: ${email || "Not provided"}
-Interest: ${interest}
-Message: ${message || "No additional message."}
-      `,
+    const confirmationSent = await sendEmail("lead-confirmation", {
+      from: FROM,
+      to: [email],
+      replyTo: contactEmail,
+      subject: thanks.subject,
+      html: thanks.html,
+      text: thanks.text,
     });
 
     // The database record is retained even if email delivery fails.
-    if (emailError) {
-      console.error("Resend notification failed:", emailError);
-
-      return NextResponse.json({
-        ok: true,
-        saved: true,
-        emailSent: false,
-        message: "Inquiry saved. Email notification could not be sent.",
-      });
-    }
-
     return NextResponse.json({
       ok: true,
       saved: true,
-      emailSent: true,
+      emailSent,
+      confirmationSent,
       message: "Inquiry submitted successfully.",
+      // Only in local development: shows exactly why an email failed.
+      ...(process.env.NODE_ENV !== "production" ? { debug: problems } : {}),
     });
   } catch (error) {
     console.error("Inquiry API error:", error);

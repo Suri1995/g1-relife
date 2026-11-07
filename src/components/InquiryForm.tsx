@@ -3,14 +3,22 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Mail } from "lucide-react";
 import { inquirySchema, type InquiryInput } from "@/lib/validation";
-import { services } from "@/data/wellness";
+import { services, business } from "@/data/wellness";
+
+type Submitted = { name: string; email: string; confirmed: boolean };
+
+function whatsappUrl(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return `https://wa.me/${digits.length === 10 ? `91${digits}` : digits}`;
+}
 
 export default function InquiryForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
+  const [submitted, setSubmitted] = useState<Submitted | null>(null);
 
   const {
     register,
@@ -31,6 +39,16 @@ export default function InquiryForm() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Request failed");
+
+      const json = (await res.json().catch(() => ({}))) as {
+        confirmationSent?: boolean;
+      };
+
+      setSubmitted({
+        name: data.name,
+        email: data.email,
+        confirmed: json.confirmationSent !== false,
+      });
       setStatus("success");
       reset();
     } catch {
@@ -38,24 +56,51 @@ export default function InquiryForm() {
     }
   };
 
-  if (status === "success") {
+  if (status === "success" && submitted) {
+    const rawFirst = submitted.name.trim().split(/\s+/)[0] || "there";
+    const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
+
     return (
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center gap-3 rounded-2xl bg-sage/10 p-10 text-center"
+        className="flex flex-col items-center gap-3 rounded-2xl bg-sage/10 p-8 text-center sm:p-10"
       >
-        <CheckCircle2 className="text-sage-dark" size={36} aria-hidden />
-        <h3 className="font-display text-xl text-evergreen">Message sent</h3>
-        <p className="max-w-xs text-[14px] text-moss">
-          Thank you — {`we'll`} get back to you shortly. For a faster reply,
-          message us on WhatsApp.
+        <CheckCircle2 className="text-sage-dark" size={40} aria-hidden />
+        <h3 className="font-display text-2xl text-evergreen">
+          Thank you, {firstName}!
+        </h3>
+        <p className="max-w-xs text-[14px] leading-relaxed text-moss">
+          Your inquiry has been received. Our wellness team will get in touch
+          with you shortly.
         </p>
-        <button
-          onClick={() => setStatus("idle")}
-          className="mt-2 text-[13px] font-medium text-evergreen underline underline-offset-2"
+
+        {submitted.confirmed && (
+          <p className="flex w-full max-w-xs items-start gap-2 rounded-2xl border border-evergreen/10 bg-white/70 px-4 py-2.5 text-left text-[12.5px] leading-snug text-evergreen">
+            <Mail size={14} aria-hidden className="mt-0.5 shrink-0 text-honey" />
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              Confirmation sent to {submitted.email}
+            </span>
+          </p>
+        )}
+
+        <a
+          href={whatsappUrl(business.phoneRaw)}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 rounded-full bg-evergreen px-6 py-2.5 text-[13.5px] font-medium text-cream transition hover:bg-evergreen-light"
         >
-          Send another message
+          Chat with us on WhatsApp
+        </a>
+        <button
+          type="button"
+          onClick={() => {
+            setStatus("idle");
+            setSubmitted(null);
+          }}
+          className="text-[13px] font-medium text-evergreen underline underline-offset-2"
+        >
+          Send another inquiry
         </button>
       </div>
     );
@@ -70,6 +115,7 @@ export default function InquiryForm() {
           </label>
           <input
             id="name"
+            autoComplete="name"
             {...register("name")}
             className="mt-1.5 w-full rounded-xl border border-evergreen/15 bg-white px-4 py-3 text-[14px] outline-none focus:border-honey"
             placeholder="Your name"
@@ -84,6 +130,9 @@ export default function InquiryForm() {
           </label>
           <input
             id="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             {...register("phone")}
             className="mt-1.5 w-full rounded-xl border border-evergreen/15 bg-white px-4 py-3 text-[14px] outline-none focus:border-honey"
             placeholder="98765 43210"
@@ -96,11 +145,12 @@ export default function InquiryForm() {
 
       <div>
         <label htmlFor="email" className="text-[13px] font-medium text-moss">
-          Email (optional)
+          Email address
         </label>
         <input
           id="email"
           type="email"
+          autoComplete="email"
           {...register("email")}
           className="mt-1.5 w-full rounded-xl border border-evergreen/15 bg-white px-4 py-3 text-[14px] outline-none focus:border-honey"
           placeholder="you@example.com"
@@ -118,7 +168,6 @@ export default function InquiryForm() {
           id="interest"
           {...register("interest")}
           className="mt-1.5 w-full rounded-xl border border-evergreen/15 bg-white px-4 py-3 text-[14px] outline-none focus:border-honey"
-          defaultValue=""
         >
           <option value="" disabled>
             Select a program

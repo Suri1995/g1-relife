@@ -166,7 +166,7 @@ function ContactRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[12px] text-moss">{label}</span>
-          <span className="block truncate font-display text-[15px] text-evergreen">
+          <span className="block font-display text-[15px] leading-snug text-evergreen [overflow-wrap:anywhere]">
             {value}
           </span>
         </span>
@@ -182,13 +182,20 @@ function ContactRow({
   );
 }
 
-
 const STEPS: { label: string; fields: (keyof InquiryInput)[] }[] = [
   { label: "Interest", fields: ["interest"] },
   { label: "Details", fields: ["name", "phone", "email"] },
   { label: "Message", fields: ["message"] },
 ];
 const LAST = STEPS.length - 1;
+
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+/** Digits-only WhatsApp number; 10-digit numbers get the India code. */
+function whatsappUrl(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return `https://wa.me/${digits.length === 10 ? `91${digits}` : digits}`;
+}
 
 /* Direction-aware slide between steps. */
 const slide: Variants = {
@@ -200,7 +207,7 @@ const slide: Variants = {
 /* ------------------------------------------------------------------ */
 /* Measures an element so its wrapper can animate to the new height    */
 /* ------------------------------------------------------------------ */
-function useMeasure<T extends HTMLElement>() {
+function useMeasure<T extends HTMLElement>(dep?: unknown) {
   const ref = useRef<T>(null);
   const [height, setHeight] = useState<number | null>(null);
   useEffect(() => {
@@ -211,7 +218,7 @@ function useMeasure<T extends HTMLElement>() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [dep]);
   return [ref, height] as const;
 }
 
@@ -274,7 +281,7 @@ const FloatingField = forwardRef<
   FieldProps
 >(function FloatingField({ id, label, error, valid, multiline, ...props }, ref) {
   const base =
-    "peer w-full rounded-xl border bg-white px-4 pb-2 pt-6 text-[14px] text-evergreen outline-none transition-[border-color,box-shadow] duration-300 placeholder-transparent";
+    "peer w-full rounded-xl border bg-white pb-2 pl-4 pr-10 pt-6 text-[14px] text-evergreen outline-none transition-[border-color,box-shadow] duration-300 placeholder-transparent";
   const state = error
     ? "border-red-400 focus:ring-4 focus:ring-red-100"
     : "border-evergreen/15 hover:border-evergreen/30 focus:border-honey focus:ring-4 focus:ring-honey/15";
@@ -439,23 +446,41 @@ function StepTitle({ title, hint }: { title: string; hint: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Success moment: drawn check + particle burst                        */
+/* Success moment: drawn check + particle burst + personal thank-you   */
 /* ------------------------------------------------------------------ */
 const PARTICLES = Array.from({ length: 12 }, (_, i) => {
   const a = (i / 12) * Math.PI * 2;
   return { x: Math.cos(a) * 58, y: Math.sin(a) * 58, delay: (i % 3) * 0.03 };
 });
 
-function SuccessView({ onReset }: { onReset: () => void }) {
+type Submitted = { name: string; email: string; confirmed: boolean };
+
+function SuccessView({
+  submitted,
+  onReset,
+}: {
+  submitted: Submitted;
+  onReset: () => void;
+}) {
+  const rawFirst = submitted.name.trim().split(/\s+/)[0] || "there";
+  const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Bring the thank-you message into view once the form is replaced.
+  useEffect(() => {
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
   return (
     <motion.div
+      ref={rootRef}
       role="status"
       aria-live="polite"
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.4, ease: EASE }}
-      className="flex flex-col items-center gap-3 rounded-2xl bg-sage/10 p-10 text-center"
+      className="flex flex-col items-center gap-3 rounded-2xl bg-sage/10 p-8 text-center sm:p-10"
     >
       <div className="relative flex h-20 w-20 items-center justify-center">
         <motion.span
@@ -505,28 +530,57 @@ function SuccessView({ onReset }: { onReset: () => void }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="font-display text-xl text-evergreen"
+        className="font-display text-2xl tracking-tight text-evergreen"
       >
-        Message sent
+        Thank you, {firstName}!
       </motion.h3>
+
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="max-w-xs text-[14px] text-moss"
+        className="max-w-xs text-[14px] leading-relaxed text-moss"
       >
-        Thank you — {`we'll`} get back to you shortly. For a faster reply,
-        message us on WhatsApp.
+        Your inquiry has been received. Our wellness team will get in touch with
+        you shortly.
       </motion.p>
-      <motion.button
+
+      {submitted.confirmed && (
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="flex w-full max-w-xs items-start gap-2 rounded-2xl border border-evergreen/10 bg-white/70 px-4 py-2.5 text-left text-[12.5px] leading-snug text-evergreen"
+        >
+          <Mail size={14} aria-hidden className="mt-0.5 shrink-0 text-honey" />
+          <span className="min-w-0 [overflow-wrap:anywhere]">
+            Confirmation sent to {submitted.email}
+          </span>
+        </motion.p>
+      )}
+
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        onClick={onReset}
-        className="mt-2 rounded text-[13px] font-medium text-evergreen underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-honey"
+        transition={{ delay: 0.85 }}
+        className="mt-3 flex flex-col items-center gap-3"
       >
-        Send another message
-      </motion.button>
+        <a
+          href={whatsappUrl(business.phoneRaw)}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-full bg-evergreen px-6 py-2.5 text-[13.5px] font-medium text-cream shadow-[0_12px_26px_-12px_rgba(20,60,40,0.7)] transition-colors hover:bg-evergreen-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-honey"
+        >
+          Chat with us on WhatsApp
+        </a>
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded text-[13px] font-medium text-evergreen underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-honey"
+        >
+          Send another inquiry
+        </button>
+      </motion.div>
     </motion.div>
   );
 }
@@ -538,11 +592,12 @@ function InquiryForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
+  const [submitted, setSubmitted] = useState<Submitted | null>(null);
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const touched = useRef(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [measureRef, height] = useMeasure<HTMLDivElement>();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [measureRef, height] = useMeasure<HTMLDivElement>(status);
 
   const {
     register,
@@ -570,9 +625,16 @@ function InquiryForm() {
 
   const go = (i: number) => {
     touched.current = true;
-    scrollRef.current?.scrollTo({ top: 0 });
     setDir(i > step ? 1 : -1);
     setStep(i);
+    // On small screens, bring the top of the form back into view if the
+    // previous (taller) step left the page scrolled past it.
+    requestAnimationFrame(() => {
+      const el = formRef.current;
+      if (el && el.getBoundingClientRect().top < 72) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   };
 
   const next = async () => {
@@ -589,6 +651,17 @@ function InquiryForm() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Request failed");
+
+      const json = (await res.json().catch(() => ({}))) as {
+        confirmationSent?: boolean;
+      };
+
+      // Keep the details for the thank-you screen before the form is cleared.
+      setSubmitted({
+        name: data.name,
+        email: data.email,
+        confirmed: json.confirmationSent !== false,
+      });
       setStatus("success");
       reset();
     } catch {
@@ -624,6 +697,7 @@ function InquiryForm() {
 
   const resetAll = () => {
     setStatus("idle");
+    setSubmitted(null);
     setStep(0);
     setDir(1);
     touched.current = false;
@@ -632,16 +706,26 @@ function InquiryForm() {
   const primaryKey =
     status === "loading" ? "loading" : step === LAST ? "send" : "next";
 
+  // Show the thank-you screen as soon as the inquiry has been submitted.
+  if (status === "success" && submitted) {
+    return <SuccessView submitted={submitted} onReset={resetAll} />;
+  }
+
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      {status === "success" ? (
-        <SuccessView key="success" onReset={resetAll} />
-      ) : (
+    <>
+        <div className="mb-7">
+          <h3 className="font-display text-2xl tracking-tight text-evergreen">
+            Send an inquiry
+          </h3>
+          <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-moss">
+            Three quick steps. We&apos;ll get back to you as soon as possible.
+          </p>
+        </div>
         <motion.form
-          key="form"
+          ref={formRef}
           onSubmit={submit}
           noValidate
-          exit={{ opacity: 0, y: -12, transition: { duration: 0.25 } }}
+          className="scroll-mt-28"
         >
           <Stepper step={step} onGo={go} />
           <input type="hidden" {...register("interest")} />
@@ -649,10 +733,9 @@ function InquiryForm() {
           {/* Height animates to fit each step */}
           <motion.div
             initial={false}
-            animate={{ height: height === null ? "auto" : height + 16 }}
+            animate={{ height: height === null ? "auto" : height + 24 }}
             transition={{ duration: 0.45, ease: EASE }}
-            ref={scrollRef}
-            className="-mx-2 -my-2 mt-4 max-h-[min(55vh,480px)] overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-2 [scrollbar-color:rgba(20,60,40,0.3)_transparent] [scrollbar-width:thin]"
+            className="-mx-3 -mb-6 mt-4 overflow-hidden px-3 pb-6"
           >
             <div ref={measureRef} className="pt-4">
               <AnimatePresence mode="wait" custom={dir} initial={false}>
@@ -742,7 +825,7 @@ function InquiryForm() {
                     <>
                       <StepTitle
                         title="How can we reach you?"
-                        hint="Name and phone are required. Email is optional."
+                        hint="We'll use these details to get in touch and send you a confirmation."
                       />
                       <div className="space-y-5">
                         <div className="grid gap-5 sm:grid-cols-2">
@@ -767,10 +850,11 @@ function InquiryForm() {
                         </div>
                         <FloatingField
                           id="email"
-                          label="Email (optional)"
+                          label="Email address"
                           type="email"
                           autoComplete="email"
                           error={errors.email?.message}
+                          valid={EMAIL_PATTERN.test(email?.trim() ?? "")}
                           {...register("email")}
                         />
                       </div>
@@ -795,15 +879,17 @@ function InquiryForm() {
                             { k: "Interest", v: interest, to: 0 },
                             { k: "Name", v: name, to: 1 },
                             { k: "Phone", v: phone, to: 1 },
-                            ...(email ? [{ k: "Email", v: email, to: 1 }] : []),
+                            { k: "Email", v: email, to: 1 },
                           ].map((r) => (
                             <div
                               key={r.k}
-                              className="flex items-center justify-between gap-3"
+                              className="flex items-start justify-between gap-3"
                             >
-                              <dt className="text-moss">{r.k}</dt>
-                              <dd className="flex min-w-0 items-center gap-2 text-evergreen">
-                                <span className="truncate">{r.v}</span>
+                              <dt className="shrink-0 pt-0.5 text-moss">{r.k}</dt>
+                              <dd className="flex min-w-0 items-start gap-2 text-right text-evergreen">
+                                <span className="min-w-0 pt-0.5 [overflow-wrap:anywhere]">
+                                  {r.v}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => go(r.to)}
@@ -899,8 +985,7 @@ function InquiryForm() {
             </MagneticButton>
           </div>
         </motion.form>
-      )}
-    </AnimatePresence>
+    </>
   );
 }
 
@@ -983,74 +1068,66 @@ export default function Contact() {
 
           {/* Two columns, side by side */}
           <div className="mt-12 grid items-start gap-10 lg:mt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
-          {/* Left column */}
-          <div>
-            <div className="space-y-4">
-              <ContactRow
-                icon={<Phone size={18} />}
-                label="Call or WhatsApp"
-                value={business.phoneDisplay}
-                href={`tel:${business.phoneRaw}`}
-                copyValue={business.phoneDisplay}
-              />
-              <ContactRow
-                icon={<Mail size={18} />}
-                label="Email"
-                value={business.email}
-                href={`mailto:${business.email}`}
-                copyValue={business.email}
-              />
-              <ContactRow
-                icon={<MapPin size={18} />}
-                label="Location"
-                value={business.locationName}
-                href={business.mapsUrl}
-                external
-              />
+            {/* Left column */}
+            <div>
+              <div className="space-y-4">
+                <ContactRow
+                  icon={<Phone size={18} />}
+                  label="Call or WhatsApp"
+                  value={business.phoneDisplay}
+                  href={`tel:${business.phoneRaw}`}
+                  copyValue={business.phoneDisplay}
+                />
+                <ContactRow
+                  icon={<Mail size={18} />}
+                  label="Email"
+                  value={business.email}
+                  href={`mailto:${business.email}`}
+                  copyValue={business.email}
+                />
+                <ContactRow
+                  icon={<MapPin size={18} />}
+                  label="Location"
+                  value={business.locationName}
+                  href={business.mapsUrl}
+                  external
+                />
+              </div>
+
+              <motion.div variants={item} className="mt-6">
+                <ContactQR />
+              </motion.div>
+
+              <motion.div variants={item} className="mt-6">
+                <Newsletter />
+              </motion.div>
             </div>
 
-            <motion.div variants={item} className="mt-6">
-              <ContactQR />
-            </motion.div>
+            {/* Right column: the signature moment — a slow light travelling
+                around the form's edge. */}
+            <motion.div
+              variants={item}
+              className="relative self-start overflow-hidden rounded-[2rem] bg-evergreen/10 p-px shadow-[0_40px_80px_-40px_rgba(20,60,40,0.55)]"
+            >
+              <motion.span
+                aria-hidden
+                animate={{ rotate: 360 }}
+                transition={{ duration: 9, ease: "linear", repeat: Infinity }}
+                style={{
+                  x: "-50%",
+                  y: "-50%",
+                  left: "50%",
+                  top: "50%",
+                  background:
+                    "conic-gradient(from 0deg, transparent 0deg, rgba(217,164,65,0.95) 40deg, transparent 110deg)",
+                }}
+                className="pointer-events-none absolute aspect-square w-[250%]"
+              />
 
-            <motion.div variants={item} className="mt-6">
-              <Newsletter />
-            </motion.div>
-          </div>
-
-          {/* Right column: the signature moment — a slow light travelling
-              around the form's edge. */}
-          <motion.div
-            variants={item}
-            className="relative self-start overflow-hidden rounded-[2rem] bg-evergreen/10 p-px shadow-[0_40px_80px_-40px_rgba(20,60,40,0.55)]"
-          >
-            <motion.span
-              aria-hidden
-              animate={{ rotate: 360 }}
-              transition={{ duration: 9, ease: "linear", repeat: Infinity }}
-              style={{
-                x: "-50%",
-                y: "-50%",
-                left: "50%",
-                top: "50%",
-                background:
-                  "conic-gradient(from 0deg, transparent 0deg, rgba(217,164,65,0.95) 40deg, transparent 110deg)",
-              }}
-              className="pointer-events-none absolute aspect-square w-[250%]"
-            />
-
-            <div className="relative rounded-[calc(2rem-1px)] bg-gradient-to-b from-white to-cream/60 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,1)] sm:p-10">
-              <h3 className="font-display text-2xl tracking-tight text-evergreen">
-                Send an inquiry
-              </h3>
-              <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-moss">
-                Three quick steps. We&apos;ll get back to you as soon as possible.
-              </p>
-              <div className="mt-7">
+              <div className="relative rounded-[calc(2rem-1px)] bg-gradient-to-b from-white to-cream/60 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,1)] sm:p-10">
                 <InquiryForm />
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
           </div>
         </motion.div>
       </motion.section>

@@ -1,21 +1,47 @@
 import { z } from "zod";
 
 export const inquirySchema = z.object({
-  name: z.string().min(2, "Please enter your full name").max(80),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Please enter your full name")
+    .max(100, "Name is too long"),
+
   phone: z
     .string()
-    .min(10, "Enter a valid phone number")
-    .max(15, "Enter a valid phone number")
-    .regex(/^[0-9+\s-]+$/, "Enter a valid phone number"),
-  email: z.string().email("Enter a valid email address").optional().or(z.literal("")),
-  interest: z.string().min(1, "Please select a service"),
-  message: z.string().max(600).optional().or(z.literal("")),
+    .trim()
+    .min(1, "Please enter your phone number")
+    .regex(/^[+()\-\s\d]{7,18}$/, "Please enter a valid phone number"),
+
+  // Email is now REQUIRED so every lead can be followed up and thanked.
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please enter your email address")
+    .email("Please enter a valid email address")
+    .max(254, "Email is too long"),
+
+  interest: z
+    .string()
+    .trim()
+    .min(1, "Please choose what you're interested in")
+    .max(120),
+
+  message: z.string().trim().max(1000, "Message is too long").optional().or(z.literal("")),
 });
 
 export type InquiryInput = z.infer<typeof inquirySchema>;
 
+/* ------------------------------------------------------------------ */
+/* Newsletter signup (used by components/Newsletter.tsx)               */
+/* ------------------------------------------------------------------ */
 export const newsletterSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please enter your email address")
+    .email("Please enter a valid email address")
+    .max(254, "Email is too long"),
 });
 
 export type NewsletterInput = z.infer<typeof newsletterSchema>;
