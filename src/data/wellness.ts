@@ -6,7 +6,7 @@ export const business = {
   phoneDisplay: "+91 99667 63679",
   phoneRaw: "+919966763679",
   whatsapp: "https://wa.me/919966763679",
-  email: "veenag1.fitcoach@gmail.com",
+  email: "g1relifenutrition@gmail.com",
   locationName: "Dilsukhnagar, Hyderabad",
   mapsUrl:
     "https://www.google.com/maps/place/G1+Re-Life+wellness+Zone+Dilshuknagar/@17.3696902,78.5484509,733m/data=!3m1!1e3!4m6!3m5!1s0x3bcb99089b38a29d:0x32d7b6927490e724!8m2!3d17.369709!4d78.5484122!16s%2Fg%2F11f6dksw9n",
