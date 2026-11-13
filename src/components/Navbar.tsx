@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   AnimatePresence,
@@ -385,6 +386,7 @@ function MobileMenu({ active, close }: { active: string; close: () => void }) {
 /* -------------------------------------------------------------------------- */
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -442,6 +444,10 @@ export default function Navbar() {
   }, [open]);
 
   const close = () => setOpen(false);
+
+  if (pathname === "/privacy-policy" || pathname === "/terms-and-conditions") {
+    return null;
+  }
 
   return (
     <MotionConfig reducedMotion="user">
