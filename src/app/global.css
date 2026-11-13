@@ -92,3 +92,159 @@ select:focus-visible {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-fraunces: "Fraunces", serif;
+  --font-inter: "Inter", sans-serif;
+
+  /* Gire-Life brand palette */
+  --Primary: #475545; /* Primary */
+  --Dark: #394637;    /* Text / dark */
+  --Secondary: #818981;    /* Secondary */
+  --Accent: #C69A75;  /* Accent */
+  --Accent-dark: #AC7F5C;       /* Accent dark */
+  --Accent-light: #D8B391;    /* Accent light */
+  --Background: #F5EEE4;  /* Background */
+  --Surface: #FCFAF6;  /* Surface */
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html,
+body {
+  background-color: var(--color-ivory-cream);
+  color: var(--color-deep-pine);
+}
+
+body {
+  font-family: var(--font-inter);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-fraunces);
+}
+
+::selection {
+  background-color: var(--color-forest-green);
+  color: var(--color-ivory-cream);
+}
+
+/* visible keyboard focus everywhere */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-copper);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.section-pad {
+  padding-top: clamp(3.5rem, 7vw, 7rem);
+  padding-bottom: clamp(3.5rem, 7vw, 7rem);
+}
+
+.container-content {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1.25rem, 4vw, 2.5rem);
+  padding-right: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* leaf/texture grain overlay used behind hero + CTA */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ───────────────────────────────────────────────
+   Legal pages (Privacy Policy / Terms & Conditions)
+   ─────────────────────────────────────────────── */
+
+@keyframes lgx-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes lgx-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-18px, 14px, 0) scale(1.04); }
+}
+@keyframes lgx-ring {
+  from { stroke-dashoffset: 760; }
+  to   { stroke-dashoffset: 190; }
+}
+
+/* The one orchestrated moment: hero text rising in, staggered */
+.lgx-rise {
+  opacity: 0;
+  animation: lgx-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+.lgx-drift { animation: lgx-drift 24s ease-in-out infinite; }
+.lgx-ring-arc {
+  stroke-dasharray: 760;
+  stroke-dashoffset: 760;
+  animation: lgx-ring 2.4s cubic-bezier(0.3, 0.7, 0.2, 1) 0.3s forwards;
+}
+
+/* Fine paper grain over the dark hero */
+.lgx-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lgx-rise { opacity: 1; animation: none; }
+  .lgx-drift { animation: none; }
+  .lgx-ring-arc { animation: none; stroke-dashoffset: 190; }
+}
+
+/* Print: clean, ink-friendly document */
+@media print {
+  .lgx-no-print { display: none !important; }
+  .lgx-root { background: #fff !important; color: #000 !important; }
+  .lgx-hero { background: #fff !important; color: #000 !important; padding: 0 0 1rem !important; }
+  .lgx-hero * { color: #000 !important; }
+  .lgx-hero::after, .lgx-hero > div[aria-hidden] { display: none !important; }
+  .lgx-paper, .lgx-panel { box-shadow: none !important; background: #fff !important; color: #000 !important; border: 0 !important; }
+  .lgx-panel * { color: #000 !important; }
+  .lgx-rise { opacity: 1 !important; animation: none !important; }
+  section { break-inside: avoid; }
+}
